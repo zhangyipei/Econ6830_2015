@@ -1040,7 +1040,8 @@ MathJax.Hub.Config({
   showProcessingMessages: false
 });
 </script>
-<title>lecture1_pre</title></head><body><article class="markdown-body"><h1 id="lecture-1"><a name="user-content-lecture-1" href="#lecture-1" class="headeranchor-link" aria-hidden="true"><span class="headeranchor"></span></a>Lecture 1</h1>
+<title>lecture1</title></head><body><article class="markdown-body"><h1 id="lecture-1"><a name="user-content-lecture-1" href="#lecture-1" class="headeranchor-link" aria-hidden="true"><span class="headeranchor"></span></a>Lecture 1</h1>
+<p>Zhentao Shi</p>
 <p>5/18/2015</p>
 <h3 id="r"><a name="user-content-r" href="#r" class="headeranchor-link" aria-hidden="true"><span class="headeranchor"></span></a>R</h3>
 <h5 id="basic"><a name="user-content-basic" href="#basic" class="headeranchor-link" aria-hidden="true"><span class="headeranchor"></span></a>Basic</h5>
@@ -1069,6 +1070,38 @@ print(logi_12)
 <li>matrix</li>
 </ul>
 <p>example: OLS estimator with two x regressors and a constant</p>
+<pre><code># an example to check the OLS fitting
+rm(list = ls( ) )
+set.seed(111)
+
+# set the parameters
+n = 100
+b0 = matrix(1, nrow = 2 )
+
+# generate the data
+e = rnorm(n)
+X = cbind( 1, rnorm(n) ) # you can try this line. See what is the difference.
+Y = X %*% b0 + e
+
+# OLS estimation
+bhat = solve( t(X) %*% X, t(X)%*% Y ) 
+
+# plot
+plot( y = Y, x = X[,2], xlab = &quot;X&quot;, ylab = &quot;Y&quot;, main = &quot;regression&quot;)
+abline( a= bhat[1], b = bhat[2])
+abline( a = b0[1], b = b0[2], col = &quot;red&quot;)
+abline( h = 0, lty = 2)
+abline( v = 0, lty = 2)
+
+# calculate the t-value
+bhat2 = bhat[2] # parameter we want to test
+e_hat = Y - X %*% bhat
+sigma_hat_square = sum(e_hat^2)/ (n-2)
+sig_B = solve( t(X) %*% X  ) * sigma_hat_square
+t_value_2 = ( bhat2 - b0[2]) / sqrt( sig_B[2,2] ) 
+
+</code></pre>
+
 <h5 id="mixed-data-types"><a name="user-content-mixed-data-types" href="#mixed-data-types" class="headeranchor-link" aria-hidden="true"><span class="headeranchor"></span></a>Mixed data types</h5>
 <ul>
 <li>list</li>
@@ -1094,20 +1127,57 @@ write.csv(HEX, file = &quot;HEX.csv&quot;)
 <li>generate 1000 observations for the above distribution. plot the kernel density.</li>
 <li>calculate the 95-th quantile and the empirical probability of observing a value greater than the 95-th quantile.</li>
 </ol>
+<pre><code>set.seed(888)
+x_axis = seq(0.01, 15, by = 0.01)
+
+y = dchisq(x_axis, df = 3)
+plot(y = y, x=x_axis, type = &quot;l&quot;)
+z = rchisq(1000, df = 3)
+lines( density(z), col = &quot;red&quot;)
+crit = qchisq(.95, df = 3)
+
+mean( z &gt; crit )
+</code></pre>
+
 <h5 id="user-defined-function"><a name="user-content-user-defined-function" href="#user-defined-function" class="headeranchor-link" aria-hidden="true"><span class="headeranchor"></span></a>User-defined function</h5>
 <ul>
 <li><code>fun_name = function(args) {expressions}</code></li>
 <li>variables defined in a functions are local.</li>
 </ul>
-<p>example: given a sample, calculate the asymptotically valid 95% confidence interval according to a central limit theorem.</p>
+<p>example: given a sample, calculate the asymptotically valid 95% confidence interval according to a central limit theorem.<br />
+<pre><code># construct confidence interval
+
+CI = function(x){
+  # x is a vector of random variables
+
+  n = length(x)
+  mu = mean(x)
+  sig = sd(x)
+  upper = mu + 1.96/sqrt(n) * sig
+  lower = mu - 1.96/sqrt(n) * sig
+  return( list( lower = lower, upper = upper) )
+}
+
+</code></pre></p>
 <h5 id="flow-control"><a name="user-content-flow-control" href="#flow-control" class="headeranchor-link" aria-hidden="true"><span class="headeranchor"></span></a>Flow control</h5>
 <ul>
 <li><code>if</code></li>
 <li><code>for</code>, <code>while</code></li>
 </ul>
 <p>example: calculate the empirical coverage probability of a poisson distribution of degree of freedom 2.</p>
-<pre><code>pts0 = Sys.time() # check time
-{code block}
+<pre><code>Rep = 1000
+sample_size = 100
+capture = rep(0, Rep)
+
+
+pts0 = Sys.time() # check time
+for (i in 1:Rep){
+  mu = 2
+  x = rpois(sample_size, mu)
+  bounds = CI(x)
+  capture[i] = ( ( bounds$lower &lt;= mu  ) &amp; (mu &lt;= bounds$upper) )
+}
+mean(capture) # empirical size
 pts1 = Sys.time() - pts0 # check time elapse
 print(pts1)
 </code></pre>
@@ -1115,53 +1185,4 @@ print(pts1)
 <h5 id="statistical-models"><a name="user-content-statistical-models" href="#statistical-models" class="headeranchor-link" aria-hidden="true"><span class="headeranchor"></span></a>Statistical models</h5>
 <ul>
 <li><code>lm(y~x, data = )</code></li>
-</ul>
-<h3 id="terminal-commands"><a name="user-content-terminal-commands" href="#terminal-commands" class="headeranchor-link" aria-hidden="true"><span class="headeranchor"></span></a>Terminal Commands</h3>
-<p>Basic</p>
-<ul>
-<li>mkdir</li>
-<li>cd</li>
-<li>copy</li>
-</ul>
-<p>Remote</p>
-<ul>
-<li>top</li>
-<li>screen</li>
-<li>ssh user@address</li>
-<li>start a program</li>
-</ul>
-<h3 id="git"><a name="user-content-git" href="#git" class="headeranchor-link" aria-hidden="true"><span class="headeranchor"></span></a>Git</h3>
-<p>References</p>
-<ul>
-<li><a href="https://www.atlassian.com/git/tutorials">Online Tutorial</a></li>
-<li><a href="http://git-scm.com/book/en/v2">Pro Git</a></li>
-</ul>
-<h4 id="basic-commands"><a name="user-content-basic-commands" href="#basic-commands" class="headeranchor-link" aria-hidden="true"><span class="headeranchor"></span></a>basic commands</h4>
-<p>Local</p>
-<ul>
-<li>git config &ndash;global user.name <name></li>
-<li>git config &ndash;global user.email <email></li>
-<li>git init</li>
-<li>git status</li>
-<li>git add</li>
-<li>git commit</li>
-<li>git log</li>
-<li>git reset &ndash;hard REF</li>
-<li>git tag -a v1.0 -m &lsquo;message&rsquo;</li>
-<li>git rm &ndash;cached filename</li>
-<li>git branch [brach_name]</li>
-<li>git checkout [commit_id or branch name]</li>
-<li>.gitignore</li>
-</ul>
-<p>Remote</p>
-<ul>
-<li>git remote add origin</li>
-<li>git push origin master</li>
-<li>git config http.postBuffer 524288000 (for 500m space)</li>
-<li>git push -f (if the remote head if more advanced.)</li>
-</ul>
-<h4 id="bonoho-git-server"><a name="user-content-bonoho-git-server" href="#bonoho-git-server" class="headeranchor-link" aria-hidden="true"><span class="headeranchor"></span></a>Bonoho Git Server</h4>
-<p>During the installation, must register AP.NET 4.5.<br />
-Initial User: admin<br />
-Initial psd: admin<br />
-<a href="http://bonobogitserver.com/prerequisites/"><a href="http://bonobogitserver.com/prerequisites/"><a href="http://bonobogitserver.com/prerequisites/">http://bonobogitserver.com/prerequisites/</a></a></a></p></article></body></html>
+</ul></article></body></html>

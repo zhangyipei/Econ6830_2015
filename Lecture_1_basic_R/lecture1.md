@@ -1,5 +1,7 @@
 # Lecture 1
 
+Zhentao Shi
+
 5/18/2015
 
 ### R
@@ -35,6 +37,39 @@ print(logi_12)
 
 example: OLS estimator with two x regressors and a constant
 
+```
+# an example to check the OLS fitting
+rm(list = ls( ) )
+set.seed(111)
+
+# set the parameters
+n = 100
+b0 = matrix(1, nrow = 2 )
+
+# generate the data
+e = rnorm(n)
+X = cbind( 1, rnorm(n) ) # you can try this line. See what is the difference.
+Y = X %*% b0 + e
+
+# OLS estimation
+bhat = solve( t(X) %*% X, t(X)%*% Y ) 
+
+# plot
+plot( y = Y, x = X[,2], xlab = "X", ylab = "Y", main = "regression")
+abline( a= bhat[1], b = bhat[2])
+abline( a = b0[1], b = b0[2], col = "red")
+abline( h = 0, lty = 2)
+abline( v = 0, lty = 2)
+
+# calculate the t-value
+bhat2 = bhat[2] # parameter we want to test
+e_hat = Y - X %*% bhat
+sigma_hat_square = sum(e_hat^2)/ (n-2)
+sig_B = solve( t(X) %*% X  ) * sigma_hat_square
+t_value_2 = ( bhat2 - b0[2]) / sqrt( sig_B[2,2] ) 
+
+```
+
 ##### Mixed data types
 
 * list
@@ -62,6 +97,18 @@ example:
 2. generate 1000 observations for the above distribution. plot the kernel density.
 3. calculate the 95-th quantile and the empirical probability of observing a value greater than the 95-th quantile.
 
+```
+set.seed(888)
+x_axis = seq(0.01, 15, by = 0.01)
+
+y = dchisq(x_axis, df = 3)
+plot(y = y, x=x_axis, type = "l")
+z = rchisq(1000, df = 3)
+lines( density(z), col = "red")
+crit = qchisq(.95, df = 3)
+
+mean( z > crit )
+```
 
 ##### User-defined function
 
@@ -69,6 +116,21 @@ example:
 * variables defined in a functions are local.
 
 example: given a sample, calculate the asymptotically valid 95% confidence interval according to a central limit theorem.
+```
+# construct confidence interval
+
+CI = function(x){
+  # x is a vector of random variables
+  
+  n = length(x)
+  mu = mean(x)
+  sig = sd(x)
+  upper = mu + 1.96/sqrt(n) * sig
+  lower = mu - 1.96/sqrt(n) * sig
+  return( list( lower = lower, upper = upper) )
+}
+
+```
 
 ##### Flow control
 
@@ -77,76 +139,25 @@ example: given a sample, calculate the asymptotically valid 95% confidence inter
 
 example: calculate the empirical coverage probability of a poisson distribution of degree of freedom 2.
 
+
 ```
+Rep = 1000
+sample_size = 100
+capture = rep(0, Rep)
+
+
 pts0 = Sys.time() # check time
-{code block}
+for (i in 1:Rep){
+  mu = 2
+  x = rpois(sample_size, mu)
+  bounds = CI(x)
+  capture[i] = ( ( bounds$lower <= mu  ) & (mu <= bounds$upper) )
+}
+mean(capture) # empirical size
 pts1 = Sys.time() - pts0 # check time elapse
 print(pts1)
 ```
 
 ##### Statistical models
 * `lm(y~x, data = )`
-
-
-
-### Terminal Commands
-
-Basic
-
-* mkdir
-* cd
-* copy
-
-Remote
-
-* top
-* screen
-* ssh user@address
-* start a program
-
-
-### Git
-
-References
-
-* [Online Tutorial](https://www.atlassian.com/git/tutorials)
-* [Pro Git](http://git-scm.com/book/en/v2)
-
-#### basic commands
-
-Local
-
-* git config --global user.name <name>
-* git config --global user.email <email>
-* git init
-* git status
-* git add
-* git commit
-* git log
-* git reset --hard REF
-* git tag -a v1.0 -m 'message'
-* git rm --cached filename
-* git branch [brach_name]
-* git checkout [commit_id or branch name]
-* .gitignore
-
-Remote
-
-* git remote add origin
-* git push origin master
-* git config http.postBuffer 524288000 (for 500m space)
-* git push -f (if the remote head if more advanced.)
-
-
-
-
-
-#### Bonoho Git Server
-During the installation, must register AP.NET 4.5.
-Initial User: admin
-Initial psd: admin
-[http://bonobogitserver.com/prerequisites/](http://bonobogitserver.com/prerequisites/)
-
-
-
 
