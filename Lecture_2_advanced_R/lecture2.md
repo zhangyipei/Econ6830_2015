@@ -159,7 +159,7 @@ pts1 = Sys.time() - pts0 # check time elapse
 print(pts1)
 ```
 
-A `plyr` loop. It saves the book keeping, and easier to parallelize.
+A `plyr` loop. It saves book keeping chores, and easier to parallelize.
 
 ```
 library(plyr)
@@ -181,7 +181,7 @@ print(pts1)
 #### Parallel computing
 
 
-The basic structure for parallel computing
+The basic structure for parallel computing.
 
 ```
 library(plyr)
@@ -205,7 +205,7 @@ library(plyr)
 library(foreach)
 library(doParallel)
 
-registerDoParallel(2) # opens other CPUs
+registerDoParallel(2) # opens 2 CPUs
 
 pts0 = Sys.time() # check time
 out = ldply(.data = 1:Rep, .fun = capture, .parallel = TRUE,
@@ -216,7 +216,7 @@ print(pts1)
 ```
 The above block indeed takes more time, because each loop runs very fast.
 
-The code below shows a different story
+The code below shows a different story. Each loop takes more time, which dominates the overhead of the CPU communication.
 ```
 Rep = 200
 sample_size = 2000000
@@ -239,13 +239,12 @@ print(pts1)
 Try out this script on our econ super computer.
 
 
-1. Log in `econsuper`
-2. Save the code block below as `loop_server.R`, and upload it to the server
-3. In a terminal, run `R --vanilla <loop_server.R> result.out &`
+1. Log in `econsuper`;
+2. Save the code block below as `loop_server.R`, and upload it to the server;
+3. In a terminal, run `R --vanilla <loop_server.R> result_your_name.out &`;
 
 
 ```
-library(plyr)
 library(plyr)
 library(foreach)
 library(doParallel)
@@ -288,51 +287,4 @@ cat( "empirical coverage probability = ", mean(out$V1), "\n") # empirical size
 pts1 = Sys.time() - pts0 # check time elapse
 print(pts1)
 ```
-
-
-#### Terminal Commands
-
-Basic
-
-* mkdir
-* cd
-* copy
-
-Remote
-
-* top
-* screen
-* ssh user@address
-* start a program
-
-
-#### Graphics
-
-`library(ggplot2)`
-`library(reshape2)`
-
-`ggplot2` is a sophisticated graphic system that generated high-quality statistical graphs. `reshape2` is a package dedicated for reshaping the data frame for `ggplot2` to use.
-
-example: plot the density of two estimators under three different data generating processes.
-```
-load("big150.Rdata")
-library(ggplot2)
-library(reshape2)
-
-big150_1 = big150[, c("typb",  "b1", "b1_c")]
-big150_1 = melt(big150_1, id.vars = "typb", measure.vars = c("b1", "b1_c"))
-names(big150_1)[2] = "estimator"
-
-p1 = ggplot(big150_1) 
-p1 = p1 + geom_area(stat = "density", alpha = .25, 
-                    aes(x = value, fill = estimator),  position = "identity")
-p1 = p1 + facet_grid( typb ~ .) 
-p1 = p1 + geom_vline(xintercept = 0)
-p1 = p1 + theme_bw()
-p1 = p1 + theme(strip.text = element_text( size = 16), 
-                axis.text = element_text( size = 16))
-print(p1)
-```
-
-
 
