@@ -17,6 +17,11 @@ This is Zhentao's Git repository. I will teach 6 lectures, or half of the course
 * [R-studio](http://www.rstudio.com/)
 * [Git](http://git-scm.com/)
 
+for Windows users,
+
+* [PuTTY](http://www.putty.org/)
+* [WinSCP](http://winscp.net/eng/download.php)
+
 #### Outline
 * Lecture 1 (May 18): Basic R
 * Lecture 2 (May 20): Advanced R

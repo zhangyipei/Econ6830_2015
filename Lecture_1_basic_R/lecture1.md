@@ -35,7 +35,7 @@ print(logi_12)
 * `%*%`, `solve`, `eigen`
 * matrix
 
-example: OLS estimator with two x regressors and a constant
+example: OLS estimator with one x regressors and a constant
 
 ```
 # an example to check the OLS fitting

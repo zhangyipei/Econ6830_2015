@@ -1040,18 +1040,299 @@ MathJax.Hub.Config({
   showProcessingMessages: false
 });
 </script>
-<title>README</title></head><body><article class="markdown-body"><p>The Chinese University of Hong Kong</p>
-<h2 id="econ6830-computational-methods-in-economics"><a name="user-content-econ6830-computational-methods-in-economics" href="#econ6830-computational-methods-in-economics" class="headeranchor-link" aria-hidden="true"><span class="headeranchor"></span></a>Econ6830:  Computational Methods in Economics</h2>
-<p><strong>Instructor</strong>: Naijia Guo, Zhentao Shi</p>
-<p><strong>Venue</strong>: ELB 207</p>
-<p><strong>Time</strong>: 9:30&ndash;12:15</p>
-<p>This is Zhentao&rsquo;s Git repository. I will teach 6 lectures, or half of the course.</p>
-<p><em>R</em> is the language for this course. Please install <a href="http://www.r-project.org/">R</a> and <a href="http://www.rstudio.com/">R-studio</a> before coming to class.</p>
+<title>lecture2</title></head><body><article class="markdown-body"><h1 id="lecture-2"><a name="user-content-lecture-2" href="#lecture-2" class="headeranchor-link" aria-hidden="true"><span class="headeranchor"></span></a>Lecture 2</h1>
+<p>Zhentao Shi</p>
+<p>5/20/2015</p>
+<p>A message from Naijia: the next lecture wil meet at the department computing room.</p>
+<h3 id="git"><a name="user-content-git" href="#git" class="headeranchor-link" aria-hidden="true"><span class="headeranchor"></span></a>Git</h3>
+<p>References</p>
 <ul>
-<li>Lecture 1 (May 18): Basic R</li>
-<li>Lecture 2 (May 20): Advanced R</li>
-<li>Lecture 3 (June 3): Monte Carlo Simulation</li>
-<li>Lecture 5 (June 5): Numerical Integration</li>
-<li>Lecture 5 (June 8): Numerical Optimization</li>
-<li>Lecture 6 (June 10): Bootstrap</li>
-</ul></article></body></html>
+<li><a href="https://www.atlassian.com/git/tutorials">Online Tutorial</a></li>
+<li><a href="http://git-scm.com/book/en/v2">Pro Git</a></li>
+</ul>
+<h4 id="basic-commands"><a name="user-content-basic-commands" href="#basic-commands" class="headeranchor-link" aria-hidden="true"><span class="headeranchor"></span></a>basic commands</h4>
+<p>Local</p>
+<ul>
+<li>git config &ndash;global user.name <name></li>
+<li>git config &ndash;global user.email <email></li>
+<li>git init</li>
+<li>git status</li>
+<li>git add</li>
+<li>git commit</li>
+<li>git log</li>
+<li>git reset &ndash;hard REF</li>
+<li>git tag -a v1.0 -m &lsquo;message&rsquo;</li>
+<li>git rm &ndash;cached filename</li>
+<li>git branch [brach_name]</li>
+<li>git checkout [commit_id or branch name]</li>
+<li>.gitignore</li>
+</ul>
+<p>Remote</p>
+<ul>
+<li>git remote add origin</li>
+<li>git push origin master</li>
+<li>git config http.postBuffer 524288000 (for 500m space)</li>
+<li>git push -f (if the remote head if more advanced.)</li>
+</ul>
+<h4 id="bonoho-git-server"><a name="user-content-bonoho-git-server" href="#bonoho-git-server" class="headeranchor-link" aria-hidden="true"><span class="headeranchor"></span></a>Bonoho Git Server</h4>
+<p>During the installation, must register AP.NET 4.5.<br />
+Initial User: admin<br />
+Initial psd: admin<br />
+<a href="http://bonobogitserver.com/prerequisites/"><a href="http://bonobogitserver.com/prerequisites/"><a href="http://bonobogitserver.com/prerequisites/">http://bonobogitserver.com/prerequisites/</a></a></a></p>
+<h3 id="advanced-r"><a name="user-content-advanced-r" href="#advanced-r" class="headeranchor-link" aria-hidden="true"><span class="headeranchor"></span></a>Advanced R</h3>
+<h4 id="speed"><a name="user-content-speed" href="#speed" class="headeranchor-link" aria-hidden="true"><span class="headeranchor"></span></a>Speed</h4>
+<p>Mathematically equivalent though, different calculation methods perform very differently in terms of computational speed. </p>
+<p>example: calculate the heteroskedastic-robust variance for the OLS regression of a linear probability model. The difficult part is \( \sum_{i=1}^n e_i^2 x_i x_i&rsquo; \). We propose four ways.</p>
+<ol>
+<li>literally add through \( i = 1,\ldots,n \) one by one.</li>
+<li>\( X&rsquo; \mathrm{diag}(e^2) X \), with a dense central matrix.</li>
+<li>\( X&rsquo; \mathrm{diag}(e^2) X \), with a sparse central matrix.</li>
+<li>\( Xe \) cross product.</li>
+</ol>
+<pre><code># an example of robust matrix, sparse matrix. Vecteroization.
+rm(list = ls( ) )
+library(Matrix)
+
+set.seed(111)
+
+n = 6000; Rep = 10; # Matrix is quick, matrix is slow, adding is OK
+# n = 50; Rep = 1000;  # Matrix is slow,  matrix is quick, adding is OK
+
+for (opt in 1:4){
+
+  pts0 = Sys.time()
+
+  for (iter in 1:Rep){
+    # set the parameters
+    b0 = matrix( c(-1,1), nrow = 2 )
+
+    # generate the data
+    e = rnorm(n)
+    X = cbind( 1, rnorm(n) ) 
+    Y = (X %*% b0 + e &gt;=0 ) 
+    # note that in this regression b0 is not converge to b0 
+    # because the model is changed.
+
+    # OLS estimation
+    bhat = solve( t(X) %*% X, t(X)%*% Y ) 
+
+    # calculate the t-value
+    bhat2 = bhat[2] # parameter we want to test
+    e_hat = Y - X %*% bhat
+
+    XXe2 = matrix(0, nrow = 2, ncol = 2)
+
+    if (opt == 1){
+      for ( i in 1:n){
+        XXe2 = XXe2 + e_hat[i]^2 * X[i,] %*% t(X[i,])
+      }
+    } else if (opt == 2) {# the vectorized version
+      e_hat2_M = matrix(0, nrow = n, ncol = n)
+      diag(e_hat2_M) = e_hat^2
+      XXe2 = t(X) %*% e_hat2_M %*% X
+    } else if (opt == 3)  {# the vectorized version
+      e_hat2_M = Matrix( 0, ncol = n, nrow = n)
+      diag(e_hat2_M) = e_hat^2
+      XXe2 = t(X) %*% e_hat2_M %*% X
+    } else if (opt == 4)  {# the best vectorization method. No waste
+      Xe = X * e
+      XXe2 = t(Xe) %*% Xe
+    } 
+
+
+    XX_inv = solve( t(X) %*% X  )
+    sig_B =  XX_inv %*% XXe2 %*% XX_inv 
+  }
+  cat(&quot;n = &quot;, n, &quot;, Rep = &quot;, Rep, &quot;, opt = &quot;, opt, &quot;, 
+  time = &quot;, Sys.time() - pts0, &quot;\n&quot;)
+}
+</code></pre>
+
+<h4 id="efficient-loop"><a name="user-content-efficient-loop" href="#efficient-loop" class="headeranchor-link" aria-hidden="true"><span class="headeranchor"></span></a>Efficient loop</h4>
+<p><a href="http://plyr.had.co.nz/"><code>plyr</code></a> is an R package developed by <a href="http://had.co.nz/">Hadley Wickham</a>. </p>
+<p>example: calculate the empirical coverage probability of a poisson distribution of degree of freedom 2.</p>
+<pre><code># construct confidence interval
+
+CI = function(x){
+  # x is a vector of random variables
+
+  n = length(x)
+  mu = mean(x)
+  sig = sd(x)
+  upper = mu + 1.96/sqrt(n) * sig
+  lower = mu - 1.96/sqrt(n) * sig
+  return( list( lower = lower, upper = upper) )
+}
+</code></pre>
+
+<p>The standard loop</p>
+<pre><code>Rep = 10000
+sample_size = 1000
+
+# a standard loop
+out = rep(0, Rep)
+pts0 = Sys.time() # check time
+mu = 2
+for (i in 1:Rep){
+  x = rpois(sample_size, mu)
+  bounds = CI(x)
+  out[i] = ( ( bounds$lower &lt;= mu  ) &amp; (mu &lt;= bounds$upper) )
+}
+cat( &quot;empirical coverage probability = &quot;, mean(out), &quot;\n&quot;) # empirical size
+pts1 = Sys.time() - pts0 # check time elapse
+print(pts1)
+</code></pre>
+
+<p>A <code>plyr</code> loop. It saves the book keeping, and easier to parallelize.</p>
+<pre><code>library(plyr)
+
+capture = function(i){
+  x = rpois(sample_size, mu)
+  bounds = CI(x)
+  return( ( bounds$lower &lt;= mu  ) &amp; (mu &lt;= bounds$upper) )
+}
+
+pts0 = Sys.time() # check time
+out = ldply( .data = 1:Rep, .fun = capture ) 
+cat( &quot;empirical coverage probability = &quot;, mean(out$V1), &quot;\n&quot;) # empirical size
+pts1 = Sys.time() - pts0 # check time elapse
+print(pts1)
+</code></pre>
+
+<h4 id="parallel-computing"><a name="user-content-parallel-computing" href="#parallel-computing" class="headeranchor-link" aria-hidden="true"><span class="headeranchor"></span></a>Parallel computing</h4>
+<p>The basic structure for parallel computing</p>
+<pre><code>library(plyr)
+library(foreach)
+library(doParallel)
+
+registerDoParallel() # opens other CPUs
+
+l_ply(.data = 1:10,
+      .fun = myfunction,
+      .parallel = TRUE,
+      .paropts = list( .packages = package.list, 
+        .export = ls(envir=globalenv() ) )
+) 
+</code></pre>
+
+<p>In this comparative example, we try<br />
+<pre><code>########### parallel 
+library(plyr)
+library(foreach)
+library(doParallel)
+
+registerDoParallel(2) # opens other CPUs
+
+pts0 = Sys.time() # check time
+out = ldply(.data = 1:Rep, .fun = capture, .parallel = TRUE,
+            .paropts = list(.export = ls(envir=globalenv() )) )
+cat( &quot;empirical coverage probability = &quot;, mean(out$V1), &quot;\n&quot;) # empirical size
+pts1 = Sys.time() - pts0 # check time elapse
+print(pts1)
+</code></pre><br />
+The above block indeed takes more time, because each loop runs very fast.</p>
+<p>The code below shows a different story<br />
+<pre><code>Rep = 200
+sample_size = 2000000
+pts0 = Sys.time() # check time
+out = ldply(.data = 1:Rep, .fun = capture, .parallel = FALSE) 
+cat( &quot;empirical coverage probability = &quot;, mean(out$V1), &quot;\n&quot;) # empirical size
+pts1 = Sys.time() - pts0 # check time elapse
+print(pts1)
+
+# compare to the parallel version
+pts0 = Sys.time() # check time
+out = ldply(.data = 1:Rep, .fun = capture, .parallel = TRUE,
+            .paropts = list(.export = ls(envir=globalenv() )) ) 
+cat( &quot;empirical coverage probability = &quot;, mean(out$V1), &quot;\n&quot;) # empirical size
+pts1 = Sys.time() - pts0 # check time elapse
+print(pts1)
+</code></pre></p>
+<h4 id="econ-super"><a name="user-content-econ-super" href="#econ-super" class="headeranchor-link" aria-hidden="true"><span class="headeranchor"></span></a>Econ Super</h4>
+<p>Try out this script on our econ super computer.</p>
+<ol>
+<li>Log in <code>econsuper</code></li>
+<li>Save the code block below as <code>loop_server.R</code>, and upload it to the server</li>
+<li>In a terminal, run <code>R --vanilla &lt;loop_server.R&gt; result.out &amp;</code></li>
+</ol>
+<pre><code>library(plyr)
+library(plyr)
+library(foreach)
+library(doParallel)
+
+########### prepare the functions ###############
+mu = 2
+CI = function(x){
+  # x is a vector of random variables
+
+  n = length(x)
+  mu = mean(x)
+  sig = sd(x)
+  upper = mu + 1.96/sqrt(n) * sig
+  lower = mu - 1.96/sqrt(n) * sig
+  return( list( lower = lower, upper = upper) )
+}
+
+capture = function(i){
+  x = rpois(sample_size, mu)
+  bounds = CI(x)
+  return( ( bounds$lower &lt;= mu  ) &amp; (mu &lt;= bounds$upper) )
+}
+
+############ implementation ###############
+Rep = 200
+sample_size = 2000000
+pts0 = Sys.time() # check time
+out = ldply(.data = 1:Rep, .fun = capture, .parallel = FALSE) 
+cat( &quot;empirical coverage probability = &quot;, mean(out$V1), &quot;\n&quot;) # empirical size
+pts1 = Sys.time() - pts0 # check time elapse
+print(pts1)
+
+# compare to the parallel version
+registerDoParallel(16) # opens other CPUs
+
+pts0 = Sys.time() # check time
+out = ldply(.data = 1:Rep, .fun = capture, .parallel = TRUE,
+            .paropts = list(.export = ls(envir=globalenv() )) ) 
+cat( &quot;empirical coverage probability = &quot;, mean(out$V1), &quot;\n&quot;) # empirical size
+pts1 = Sys.time() - pts0 # check time elapse
+print(pts1)
+</code></pre>
+
+<h4 id="terminal-commands"><a name="user-content-terminal-commands" href="#terminal-commands" class="headeranchor-link" aria-hidden="true"><span class="headeranchor"></span></a>Terminal Commands</h4>
+<p>Basic</p>
+<ul>
+<li>mkdir</li>
+<li>cd</li>
+<li>copy</li>
+</ul>
+<p>Remote</p>
+<ul>
+<li>top</li>
+<li>screen</li>
+<li>ssh user@address</li>
+<li>start a program</li>
+</ul>
+<h4 id="graphics"><a name="user-content-graphics" href="#graphics" class="headeranchor-link" aria-hidden="true"><span class="headeranchor"></span></a>Graphics</h4>
+<p><code>library(ggplot2)</code><br />
+<code>library(reshape2)</code></p>
+<p><code>ggplot2</code> is a sophisticated graphic system that generated high-quality statistical graphs. <code>reshape2</code> is a package dedicated for reshaping the data frame for <code>ggplot2</code> to use.</p>
+<p>example: plot the density of two estimators under three different data generating processes.<br />
+<pre><code>load(&quot;big150.Rdata&quot;)
+library(ggplot2)
+library(reshape2)
+
+big150_1 = big150[, c(&quot;typb&quot;,  &quot;b1&quot;, &quot;b1_c&quot;)]
+big150_1 = melt(big150_1, id.vars = &quot;typb&quot;, measure.vars = c(&quot;b1&quot;, &quot;b1_c&quot;))
+names(big150_1)[2] = &quot;estimator&quot;
+
+p1 = ggplot(big150_1) 
+p1 = p1 + geom_area(stat = &quot;density&quot;, alpha = .25, 
+                    aes(x = value, fill = estimator),  position = &quot;identity&quot;)
+p1 = p1 + facet_grid( typb ~ .) 
+p1 = p1 + geom_vline(xintercept = 0)
+p1 = p1 + theme_bw()
+p1 = p1 + theme(strip.text = element_text( size = 16), 
+                axis.text = element_text( size = 16))
+print(p1)
+</code></pre></p></article></body></html>

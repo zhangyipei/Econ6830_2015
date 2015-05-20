@@ -1,14 +1,10 @@
 # Zhentao Shi. 4/6/2015
 
 # an example of robust matrix, sparse matrix. Vecteroization.
-
 rm(list = ls( ) )
 library(Matrix)
 
 set.seed(111)
-
-
-
 
 n = 6000; Rep = 10; # Matrix is quick, matrix is slow, adding is OK
 # n = 50; Rep = 1000;  # Matrix is slow,  matrix is quick, adding is OK
@@ -57,8 +53,6 @@ for (opt in 1:4){
     
     XX_inv = solve( t(X) %*% X  )
     sig_B =  XX_inv %*% XXe2 %*% XX_inv 
-    
-    # sig_B1 = XX_inv * mean(e_hat^2) # covariance under homoskedasticity
   }
   cat("n = ", n, ", Rep = ", Rep, ", opt = ", opt, ", time = ", Sys.time() - pts0, "\n")
 }
