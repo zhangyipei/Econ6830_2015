@@ -13,18 +13,18 @@
 
 rm(list = ls( ) )
 library(plyr)
-set.seed(999)
+# set.seed(999)
 
 
 # set the parameters
 
-Rep = 20000
+Rep = 2000
 b0 = matrix(1, nrow = 2 )
-
+df = 1
 
 # the workhorse functions
 
-MonteCarlo = function(X, n, type = "Normal", df = 1){
+MonteCarlo = function(X, n, type = "Normal", df = df){
   # a function gives the t-value under the null
   if (type == "Normal"){
     e = rnorm(n)
@@ -32,7 +32,7 @@ MonteCarlo = function(X, n, type = "Normal", df = 1){
     e = rt(n, df )
   }
   
-  # X = cbind( 1, rnorm(n) ) # you can try this line. See what is the difference.
+  X = cbind( 1, rcauchy(n) )
   Y = X %*% b0 + e
   rm(e)
   
@@ -53,31 +53,29 @@ MonteCarlo = function(X, n, type = "Normal", df = 1){
 report = function(n){
   # collect the test size from the two distributions
   # this function contains some repeated code, but is OK for such a smply one
-  TEST_SIZE = rep(0,2)
-  
-  # finite sample results requires X to be fixed 
-  X = cbind( 1, rnorm(n) ) # generate the regressors
+  TEST_SIZE = rep(0,3)
   
   Res = ldply( .data = 1:Rep, .fun = function(i) MonteCarlo(X, n, "Normal")  )
   names(Res) = c("bhat2", "t_value")
   TEST_SIZE[1] = mean( abs(Res$t_value) > qt(.975, n-2) )  
+  TEST_SIZE[2] = mean( abs(Res$t_value) > qnorm(.975) ) 
   
-  Res = ldply( .data = 1:Rep, .fun = function(i) MonteCarlo(X, n, "T", 1)  )
+  Res = ldply( .data = 1:Rep, .fun = function(i) MonteCarlo(X, n, "T", df)  )
   names(Res) = c("bhat2", "t_value")
-  TEST_SIZE[2] = mean( abs(Res$t_value) > qt(.975, n-2) )
+  TEST_SIZE[3] = mean( abs(Res$t_value) > qnorm(.975) )
   
   return(TEST_SIZE)
-  print(TEST_SIZE)
 }
 
 
 pts0 = Sys.time()
 # run the calculation of the empirical sizes for different sample sizes
-NN = c(5, 10, 20, 40)
-# for (n in NN)   print(report(n)) # an alternative for the replication over NN
+NN = c(5, 10, 200, 2000)
 RES = ldply(.data = NN, .fun = report, .progress = "text" )
-names(RES) = c("Normal", "T")
+names(RES) = c("exact", "normal.asym", "t.asym")
+RES$n = NN
+RES = RES[, c(4,1:3)] # beautify the results
 print(RES)
 print( Sys.time() - pts0 )
 
-matplot( y = RES, x = NN, type = "l", ylim = c(0, 0.1) )
+# matplot( y = RES, x = NN, type = "l", ylim = c(0, 0.1) )
