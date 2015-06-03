@@ -20,14 +20,14 @@ r = 0.5
 Z = matrix( ( runif(n)-0.5 ) , ncol = 2 )
 
 inside = mean(  sqrt( rowSums( Z^2 ) )  <=  r )
-pi_hat = inside / r^2
+pi_hat = 4 * inside
 
 print(pi_hat)
 ```
 
 ### Finite Sample Performance
 
-Example: check the significance test of the OLS estimator.
+Example: the test size of the OLS estimator.
 
 Question: Is the asymptotic theory valid when X follows a Cauchy distribution?
 
@@ -43,9 +43,7 @@ rm(list = ls( ) )
 library(plyr)
 # set.seed(999)
 
-
 # set the parameters
-
 Rep = 2000
 b0 = matrix(1, nrow = 2 )
 df = 1
@@ -107,7 +105,7 @@ print( Sys.time() - pts0 )
 
 ### Markov Chain Monte Carlo
 
-Chernozhukov and Hong (2003): An MCMC approach to classical estimation
+[Chernozhukov and Hong (2003): An MCMC approach to classical estimation](http://www.sciencedirect.com/science/article/pii/S0304407603001003)
 
 ##### Metropolis-Hasting algorithm
 
@@ -119,6 +117,13 @@ Example: use Metropolis-Hasting algorithm to generate a sample of normally distr
 ```
 library(mcmc)
 h = function(x){ y = -x^2 / 2 } # the log, unnormalized function
+
+out = metrop( obj = h, initial = 0, nbatch = 100, nspac = 1  )
+plot(out$batch, type = "l") # a time series with flat steps
+
+out = metrop( obj = h, initial = 0, nbatch = 100, nspac = 10  )
+plot(out$batch, type = "l") # a time series looks like a white noise
+
 out = metrop( obj = h, initial = 0, nbatch = 10000, nspac = 10  )
 summary(out)
 plot(density(out$batch))
@@ -132,7 +137,7 @@ The *Laplace-type estimator* transforms the value of the criterion function of a
 
 ### Simulated Method of Moments
 
-Pakes and Pollard (1989): Simulation and the asymptotics of optimization estimators
+[Pakes and Pollard (1989): Simulation and the asymptotics of optimization estimators](http://www.jstor.org/stable/1913622?seq=1#page_scan_tab_contents)
 
 
 
